@@ -11,11 +11,14 @@ def readCsv(file):
 
 df = readCsv('Crash Statistics Victoria.csv')
 
+
+
 wid='1075'
 hgt='600'
 lst_day=['01','02','03','04','05','06','07','08','09']+[i for i in range(10,32)]
 lst_month=[i for i in range(1,13)]
 lst_year=[i for i in range(2013,2020)]
+
 date_list=[]
 
 for i in df.ACCIDENT_DATE:
@@ -35,10 +38,10 @@ def btn1():
     if option_val.get() ==1 : searchBy_date(date_set)
     if option_val.get() ==2 : opt2(date_set,day_comboBox_0.get()+'/'+month_comboBox_0.get()+'/'+year_comboBox_0.get()+' To '
               +day_comboBox_1.get()+'/'+month_comboBox_1.get()+'/'+ year_comboBox_1.get())
-    if option_val.get() ==3 : print('n')
-    if option_val.get() ==4 : print('n')
-    if option_val.get() ==5 : print('n')
-    
+    if option_val.get() ==3 : opt3(date_set,search_text.get())
+    if option_val.get() ==4 : opt4(date_set)
+    if option_val.get() ==5 : opt5(date_set,speed_comboBox.get())
+
 def opt2(date,title):
     try:
         start,end=date
@@ -91,6 +94,111 @@ def searchBy_date(date):
         return True
     except: 
         return False
+
+def opt3(date,keyword):
+    try:
+        start,end=date
+        search_word=keyword
+        search_word_1=search_word[0].upper()+search_word[1:]
+        for i in range(len(date_list)):
+            if int(date_list[i])>=int(start) and int(date_list[i])<=int(end) :
+                if search_word in df.ACCIDENT_TYPE[i] or search_word_1 in df.ACCIDENT_TYPE[i]:
+                    acc_time=df.ACCIDENT_TIME[i].split('.')
+                    acc_time = acc_time[0]+':'+acc_time[1]
+                    injury = df.SEVERITY[i].split()
+                    injury = injury[0]+' '+injury[1]
+                    if i%2 == 0: tagName='even' 
+                    else: tagName = ''
+                    tree.insert('','end',values=[
+                    df.ACCIDENT_NO[i],
+                    df.ACCIDENT_DATE[i],
+                    acc_time,
+                    df.ALCOHOLTIME[i],
+                    df.ACCIDENT_TYPE[i],
+                    df.DAY_OF_WEEK[i],
+                    df.LIGHT_CONDITION[i],
+                    df.ROAD_GEOMETRY[i],
+                    injury,
+                    df.SPEED_ZONE[i],
+                    df.RUN_OFFROAD[i]],tag= tagName)
+        return True
+    except:
+        return False
+def opt4(date):
+    try:
+        start,end=date
+        acc_num_y=[i for i in range(0,24)]
+        acc_num_n=[i for i in range(0,24)]
+        day_y=dict()
+        day_n=dict()
+        total_day_y=0
+        total_day_n=0
+        for i in range(len(date_list)):
+            if int(date_list[i])>=int(start) and int(date_list[i])<=int(end):
+                if df.ALCOHOLTIME[i]=='Yes' :
+                    acc_time=df.ACCIDENT_TIME[i].split('.')[0]
+                    acc_num_y[int(acc_time)] = acc_num_y[int(acc_time)] + 1
+                    day_y[df.DAY_OF_WEEK[i]] = day_y.get(df.DAY_OF_WEEK[i],0) + 1
+                    total_day_y=total_day_y+1
+                else: 
+                    acc_time=df.ACCIDENT_TIME[i].split('.')[0]
+                    acc_num_n[int(acc_time)] = acc_num_n[int(acc_time)] + 1
+                    day_n[df.DAY_OF_WEEK[i]] = day_n.get(df.DAY_OF_WEEK[i],0) + 1
+                    total_day_n=total_day_n+1
+    
+        plt.subplot(211)
+        plt.plot([i for i in range(0,24)], [i/total_day_y for i in acc_num_y], 'ro-')
+        plt.plot([i for i in range(0,24)], [i/total_day_n for i in acc_num_n], 'go-')   
+        plt.xticks([i for i in range(0,24)])
+        plt.xlabel('0-24h (Green-Alcohol not involved / Red-Alcohol involved)',loc='right')
+        plt.ylabel('Average number',color='red',loc='top') 
+        plt.title('The number of accidents on average in each hour of the day',color='blue')
+
+        day_xaxis=['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+        day_xaxis_1=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+        day_y_yaxis=[day_y.get(i,0)/total_day_y for i in day_xaxis_1]
+        day_n_yaxis=[day_n.get(i,0)/total_day_n for i in day_xaxis_1]
+        plt.subplot(212)
+        plt.plot(day_xaxis, day_y_yaxis, 'ro-')
+        plt.plot(day_xaxis, day_n_yaxis, 'go-')   
+        plt.xlabel('Day of week',loc='right')
+        plt.ylabel('Average number',loc='top',color='red') 
+        plt.title('The number of accidents on average on each day of week',color='blue')
+        plt.subplots_adjust(left=0.125, bottom=0.1, right=0.9, top=0.9, wspace=0.8, hspace=0.8)
+        plt.show()  
+        return True
+    except:
+        return False
+    
+def opt5(date,keyword):
+    try:
+        start,end=date
+        search_word=keyword
+        for i in range(len(date_list)):
+            if int(date_list[i])>=int(start) and int(date_list[i])<=int(end) :
+                if search_word in df.SPEED_ZONE[i]:
+                    acc_time=df.ACCIDENT_TIME[i].split('.')
+                    acc_time = acc_time[0]+':'+acc_time[1]
+                    injury = df.SEVERITY[i].split()
+                    injury = injury[0]+' '+injury[1]
+                    if i%2 == 0: tagName='even' 
+                    else: tagName = ''
+                    tree.insert('','end',values=[
+                    df.ACCIDENT_NO[i],
+                    df.ACCIDENT_DATE[i],
+                    acc_time,
+                    df.ALCOHOLTIME[i],
+                    df.ACCIDENT_TYPE[i],
+                    df.DAY_OF_WEEK[i],
+                    df.LIGHT_CONDITION[i],
+                    df.ROAD_GEOMETRY[i],
+                    injury,
+                    df.SPEED_ZONE[i],
+                    df.RUN_OFFROAD[i]],tag= tagName)
+        return True
+    except Exception as e:
+        return e
+            
             
 root = Tk()
 root.title('2810ICT/Group 98/Kim/Mausham/Sam')
